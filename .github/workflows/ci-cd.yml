@@ -48,7 +48,7 @@ jobs:
     steps:
     # checkout the repo
     - name: 'Checkout GitHub Action'
-      uses: actions/checkout@main
+      uses: actions/checkout@v2
       
     - name: 'Login via Azure CLI'
       uses: azure/login@v1
@@ -75,4 +75,4 @@ jobs:
         registry-username: ${{ secrets.REGISTRY_USERNAME }}
         registry-password: ${{ secrets.REGISTRY_PASSWORD }}
         name: aci-sampleapp
-        location: 'west us'
+        location: 'westus'
