@@ -1,0 +1,66 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Set up Java
+      uses: actions/setup-java@v2
+      with:
+        distribution: 'adopt'
+        java-version: '11'
+
+    - name: Build with Maven
+      run: mvn clean install
+
+    - name: Build Docker image
+      run: docker build -t my-spring-app:latest .
+
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Set up Java
+      uses: actions/setup-java@v2
+      with:
+        distribution: 'adopt'
+        java-version: '11'
+
+    - name: Run Tests
+      run: mvn test
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Set up Azure CLI
+      uses: azure/setup-azure-cli@v1
+
+    - name: Log in to Azure
+      run: az login --service-principal -u ${{ secrets.AZURE_CLIENT_ID }} -p ${{ secrets.AZURE_CLIENT_SECRET }} --tenant ${{ secrets.AZURE_TENANT_ID }}
+
+    - name: Push Docker image to Azure Container Registry (ACR)
+      run: |
+        az acr login --name azurerm_container_registry
+        docker tag my-spring-app:latest azurerm_container_registry.azurecr.io/my-spring-app:latest
+        docker push azurerm_container_registry.azurecr.io/my-spring-app:latest
+
+    - name: Deploy to Azure Web App for Containers
+      run: az webapp config container set --name portfolio-web-app --resource-group PortfolioRG --docker-custom-image-name azurerm_container_registry.azurecr.io/my-spring-app:latest

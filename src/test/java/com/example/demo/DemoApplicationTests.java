@@ -10,4 +10,10 @@ class DemoApplicationTests {
 	void contextLoads() {
 	}
 
+	@Test
+	void testEndpointWorks() {
+		Scraper scraper = new Scraper();
+		scraper.driver.get("https://www.google.com");
+	}
+
 }
