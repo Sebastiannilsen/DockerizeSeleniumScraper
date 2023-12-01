@@ -42,25 +42,39 @@ jobs:
     - name: Run Tests
       run: mvn test
 
-  deploy:
-    needs: test
-    runs-on: ubuntu-latest
+      
+      
+    
+  build-and-deploy:
+      runs-on: ubuntu-latest
+      steps:
+      # checkout the repo
+      - name: 'Checkout GitHub Action'
+        uses: actions/checkout@main
+        
+      - name: 'Login via Azure CLI'
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      
+      - name: 'Build and push image'
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+      - run: |
+          docker build . -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/sampleapp:${{ github.sha }}
+          docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/sampleapp:${{ github.sha }}
 
-    steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v2
-
-    - name: Set up Azure CLI
-      uses: azure/setup-azure-cli@v1
-
-    - name: Log in to Azure
-      run: az login --service-principal -u ${{ secrets.AZURE_CLIENT_ID }} -p ${{ secrets.AZURE_CLIENT_SECRET }} --tenant ${{ secrets.AZURE_TENANT_ID }}
-
-    - name: Push Docker image to Azure Container Registry (ACR)
-      run: |
-        az acr login --name azurerm_container_registry
-        docker tag my-spring-app:latest azurerm_container_registry.azurecr.io/my-spring-app:latest
-        docker push azurerm_container_registry.azurecr.io/my-spring-app:latest
-
-    - name: Deploy to Azure Web App for Containers
-      run: az webapp config container set --name portfolio-web-app --resource-group PortfolioRG --docker-custom-image-name azurerm_container_registry.azurecr.io/my-spring-app:latest
+      - name: 'Deploy to Azure Container Instances'
+        uses: 'azure/aci-deploy@v1'
+        with:
+          resource-group: ${{ secrets.RESOURCE_GROUP }}
+          dns-name-label: ${{ secrets.RESOURCE_GROUP }}${{ github.run_number }}
+          image: ${{ secrets.REGISTRY_LOGIN_SERVER }}/sampleapp:${{ github.sha }}
+          registry-login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+          registry-username: ${{ secrets.REGISTRY_USERNAME }}
+          registry-password: ${{ secrets.REGISTRY_PASSWORD }}
+          name: aci-sampleapp
+          location: 'west us'
