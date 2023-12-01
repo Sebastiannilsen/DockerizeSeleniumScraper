@@ -20,6 +20,10 @@ public class DemoApplication {
 			Scraper scraper = new Scraper();
 			return scraper.getTitle();
 		}
-	}
 
+		@GetMapping("/test")
+		public String test() {
+			return "endpoint is working :)";
+		}
+	}
 }
