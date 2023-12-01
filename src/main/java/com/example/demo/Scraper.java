@@ -1,10 +1,10 @@
 package com.example.demo;
 
-import io.github.bonigarcia.wdm.WebDriverManager;
-import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+
+import java.io.File;
 
 public class Scraper {
   WebDriver driver;
@@ -12,7 +12,8 @@ public class Scraper {
 
 
   public Scraper() {
-    WebDriverManager.chromedriver().setup();
+    File file = new File("/usr/bin/chromedriver");
+    System.setProperty("webdriver.chrome.driver", file.getAbsolutePath());
 
     ChromeOptions options = new ChromeOptions();
 
@@ -28,5 +29,9 @@ public class Scraper {
 
     driver.get("https://bonigarcia.dev/selenium-webdriver-java/");
     System.out.println(driver.getTitle());
+  }
+
+  public String getTitle() {
+    return driver.getTitle();
   }
 }
