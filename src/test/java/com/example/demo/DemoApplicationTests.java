@@ -71,4 +71,10 @@ class DemoApplicationTests {
 		 }
 	 }
 
+	 // add a test that will fail
+	 @Test
+	 void testFail() {
+		 assertTrue(false);
+	 }
+
 }
